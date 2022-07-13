@@ -1,15 +1,13 @@
 from django.contrib.auth.models import User
 from django.db import models
-from rest_framework.permissions import IsAuthenticated
 
 
-# Create your models here.
 class Product(models.Model):
     name = models.CharField(max_length=255)
     content = models.TextField()
     created = models.DateField(auto_now_add=True)
     updated = models.DateField(auto_now=True)
-    permission_classes = [IsAuthenticated]
+
 
     class Meta:
         ordering = ['-created']
