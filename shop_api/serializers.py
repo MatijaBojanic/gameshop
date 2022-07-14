@@ -8,9 +8,15 @@ class SubCategorySerializer(serializers.ModelSerializer):
         fields = ['id', 'name']
 
 
-class CategorySerializer(serializers.ModelSerializer):
+class CategoryShowSerializer(serializers.ModelSerializer):
     parent = SubCategorySerializer()
 
+    class Meta:
+        model = Category
+        fields = '__all__'
+
+
+class CategoryCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = '__all__'
@@ -20,7 +26,7 @@ class ProductShowSerializer(serializers.ModelSerializer):
     """
     Shows product, by loading category name instead of showing its id
     """
-    categories = CategorySerializer(many=True)
+    categories = CategoryShowSerializer(many=True)
 
     class Meta:
         model = Product
