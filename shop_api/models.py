@@ -74,3 +74,14 @@ class OrderItem(models.Model):
                               related_name='order_items',
                               related_query_name='order_items',
                               blank=True)
+
+
+class WishList(models.Model):
+    user = models.ForeignKey(User,
+                             on_delete=models.CASCADE,
+                             related_name='wish_list',
+                             related_query_name='wish_list',
+                             blank=True)
+    products = models.ManyToManyField(Product,
+                                      related_name='products',
+                                      related_query_name='products')

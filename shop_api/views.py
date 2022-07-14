@@ -1,8 +1,8 @@
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.viewsets import ModelViewSet
 from .serializers import ProductShowSerializer, ProductCreateSerializer, CommentSerializer, CategoryShowSerializer, \
-    CategoryCreateSerializer, OrderSerializer, OrderItemSerializer
-from .models import Product, Comment, Category, Order, OrderItem
+    CategoryCreateSerializer, OrderSerializer, OrderItemSerializer, WishListShowSerializer, WishListCreateSerializer
+from .models import Product, Comment, Category, Order, OrderItem, WishList
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, IsAdminUser, SAFE_METHODS, \
     BasePermission
 
@@ -102,3 +102,30 @@ class OrderItemViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(order=Order.objects.get(id=self.kwargs.get("order_pk")))
+
+
+class WishListViewSet(ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    serializer_classes = {
+        'create': WishListCreateSerializer,
+        'update': WishListCreateSerializer,
+        'partial_update': WishListCreateSerializer,
+        'destroy': WishListCreateSerializer
+    }
+    default_serializer_class = WishListShowSerializer
+
+    def get_serializer_class(self):
+        return self.serializer_classes.get(self.action, self.default_serializer_class)
+
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return WishList.objects.all()
+        return WishList.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        try:
+            if WishList.objects.get(user=self.request.user):
+                raise ValidationError("Wishlist for this user already exists")
+        except WishList.DoesNotExist:
+            serializer.save(user=self.request.user)
+

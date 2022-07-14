@@ -1,4 +1,4 @@
-from .models import Product, Comment, User, Category, OrderItem, Order
+from .models import Product, Comment, User, Category, OrderItem, Order, WishList
 from rest_framework import serializers
 
 
@@ -73,3 +73,18 @@ class OrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderItem
         fields = '__all__'
+
+
+class WishListShowSerializer(serializers.ModelSerializer):
+    products = ProductCreateSerializer(many=True)
+
+    class Meta:
+        model = WishList
+        fields = '__all__'
+
+
+class WishListCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WishList
+        fields = '__all__'
+
