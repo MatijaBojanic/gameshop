@@ -1,8 +1,9 @@
 from rest_framework.viewsets import ModelViewSet
 from .serializers import ProductShowSerializer, ProductCreateSerializer, CommentSerializer, CategoryShowSerializer, \
-    CategoryCreateSerializer
-from .models import Product, Comment, Category
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAdminUser, SAFE_METHODS, BasePermission
+    CategoryCreateSerializer, OrderSerializer, OrderItemSerializer
+from .models import Product, Comment, Category, Order, OrderItem
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, IsAdminUser, SAFE_METHODS, \
+    BasePermission
 
 
 # Create your views here.
@@ -46,3 +47,15 @@ class CategoryViewSet(ModelViewSet):
 
     def get_serializer_class(self):
         return self.serializer_classes.get(self.action, self.default_serializer_class)
+
+
+class OrderViewSet(ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    serializer_class = CommentSerializer
+    queryset = Order.objects.all()
+
+
+class OrderItemViewSet(ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    serializer_class = CommentSerializer
+    queryset = OrderItem.objects.all()

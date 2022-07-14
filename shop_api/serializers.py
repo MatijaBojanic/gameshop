@@ -1,4 +1,4 @@
-from .models import Product, Comment, User, Category
+from .models import Product, Comment, User, Category, OrderItem, Order
 from rest_framework import serializers
 
 
@@ -68,3 +68,15 @@ class CommentSerializer(serializers.ModelSerializer):
         response = super().to_representation(instance)
         response['user'] = UserSerializer(instance.user).data.get('username')
         return response
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = '__all__'
+
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderItem
+        fields = '__all__'
