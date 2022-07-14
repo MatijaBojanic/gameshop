@@ -15,9 +15,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from shop_api.views import ProductViewSet, CommentViewSet, CategoryViewSet, OrderViewSet
-from rest_framework import routers
-
+from shop_api.views import ProductViewSet, CommentViewSet, CategoryViewSet, OrderViewSet, OrderItemViewSet
+from rest_framework_nested import routers
 
 # Routers provide an easy way of automatically determining the URL conf.
 router = routers.DefaultRouter()
@@ -25,10 +24,19 @@ router.register(r'products', ProductViewSet, basename='Product')
 router.register(r'comments', CommentViewSet, basename='Comment')
 router.register(r'categories', CategoryViewSet, basename='Category')
 router.register(r'orders', OrderViewSet, basename='Category')
-
+order_item_router = routers.NestedDefaultRouter(
+    router,
+    r'orders',
+    lookup='order'
+)
+order_item_router.register(r'order_items',
+                           OrderItemViewSet,
+                           basename='order_items'
+                           )
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('', include(order_item_router.urls)),
     path('admin/', admin.site.urls),
     path('auth/', include('auth.urls')),
 ]

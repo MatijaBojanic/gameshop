@@ -1,3 +1,4 @@
+from rest_framework.exceptions import NotFound
 from rest_framework.viewsets import ModelViewSet
 from .serializers import ProductShowSerializer, ProductCreateSerializer, CommentSerializer, CategoryShowSerializer, \
     CategoryCreateSerializer, OrderSerializer, OrderItemSerializer
@@ -51,11 +52,29 @@ class CategoryViewSet(ModelViewSet):
 
 class OrderViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
-    serializer_class = CommentSerializer
-    queryset = Order.objects.all()
+    serializer_class = OrderSerializer
+
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return Order.objects.all()
+        return Order.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
 
 class OrderItemViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
-    serializer_class = CommentSerializer
+    serializer_class = OrderItemSerializer
     queryset = OrderItem.objects.all()
+
+    def get_queryset(self, *args, **kwargs):
+        order_id = self.kwargs.get("order_pk")
+        try:
+            order = Order.objects.get(id=order_id)
+        except Order.DoesNotExist:
+            raise NotFound('An order with this id does not exist')
+        return self.queryset.filter(order=order)
+
+    def perform_create(self, serializer):
+        serializer.save(order=Order.objects.get(id=self.kwargs.get("order_pk")))

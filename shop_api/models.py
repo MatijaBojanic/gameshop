@@ -54,7 +54,8 @@ class Order(models.Model):
     user = models.ForeignKey(User,
                              on_delete=models.CASCADE,
                              related_name='orders',
-                             related_query_name='orders')
+                             related_query_name='orders',
+                             blank=True)
 
 
 class OrderItem(models.Model):
@@ -69,4 +70,5 @@ class OrderItem(models.Model):
     order = models.ForeignKey(Order,
                               on_delete=models.CASCADE,
                               related_name='order_items',
-                              related_query_name='order_items')
+                              related_query_name='order_items',
+                              blank=True)
