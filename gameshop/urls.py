@@ -15,14 +15,15 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from shop_api.views import ProductViewSet, CommentViewSet
+from shop_api.views import ProductDualViewSet, CommentViewSet, CategoryViewSet
 from rest_framework import routers
 
 
 # Routers provide an easy way of automatically determining the URL conf.
 router = routers.DefaultRouter()
-router.register(r'products', ProductViewSet, basename='Product')
+router.register(r'products', ProductDualViewSet, basename='Product')
 router.register(r'comments', CommentViewSet, basename='Comment')
+router.register(r'categories', CategoryViewSet, basename='Category')
 
 
 urlpatterns = [

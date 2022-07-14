@@ -3,11 +3,23 @@ from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 
+class Category(models.Model):
+    name = models.CharField(max_length=255)
+    parent = models.ForeignKey('self',
+                               on_delete=models.CASCADE,
+                               related_name='child_categories',
+                               related_query_name='child_categories',
+                               null=True)
+
+
 class Product(models.Model):
     name = models.CharField(max_length=255)
     content = models.TextField()
     created = models.DateField(auto_now_add=True)
     updated = models.DateField(auto_now=True)
+    categories = models.ManyToManyField(Category,
+                                        related_name='categories',
+                                        related_query_name='categories')
 
     class Meta:
         ordering = ['-created']

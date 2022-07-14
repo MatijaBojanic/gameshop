@@ -1,8 +1,37 @@
-from .models import Product, Comment, User
+from .models import Product, Comment, User, Category
 from rest_framework import serializers
 
 
-class ProductSerializer(serializers.ModelSerializer):
+class SubCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'name']
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    parent = SubCategorySerializer()
+
+    class Meta:
+        model = Category
+        fields = '__all__'
+
+
+class ProductShowSerializer(serializers.ModelSerializer):
+    """
+    Shows product, by loading category name instead of showing its id
+    """
+    categories = CategorySerializer(many=True)
+
+    class Meta:
+        model = Product
+        fields = '__all__'
+
+
+class ProductCreateSerializer(serializers.ModelSerializer):
+    """
+    Instead of requiring a dictionary for setting up category relations, here we enable creation by category id
+    """
+
     class Meta:
         model = Product
         fields = '__all__'
