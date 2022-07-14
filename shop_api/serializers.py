@@ -62,13 +62,6 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = '__all__'
 
-    # If we are creating a comment object, we use user as the foreign key. If we are displaying a comment, we are
-    # showing its username value, instead FK id.
-    def to_representation(self, instance):
-        response = super().to_representation(instance)
-        response['user'] = UserSerializer(instance.user).data.get('username')
-        return response
-
 
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:

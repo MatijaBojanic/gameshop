@@ -33,11 +33,13 @@ class Comment(models.Model):
     product = models.ForeignKey(Product,
                                 on_delete=models.CASCADE,
                                 related_name='comments',
-                                related_query_name='comment')
+                                related_query_name='comment',
+                                blank=True)
     user = models.ForeignKey(User,
                              on_delete=models.CASCADE,
                              related_name='comments',
-                             related_query_name='comment')
+                             related_query_name='comment',
+                             blank=True)
     created = models.DateField(auto_now_add=True)
     updated = models.DateField(auto_now=True)
     review_score = models.IntegerField(
