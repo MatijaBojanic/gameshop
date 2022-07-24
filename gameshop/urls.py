@@ -16,7 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from shop_api.views import ProductViewSet, CommentViewSet, CategoryViewSet, OrderViewSet, OrderItemViewSet, \
-    WishListViewSet
+    WishListViewSet, ProductMediaViewSet
 from rest_framework_nested import routers
 
 # Routers provide an easy way of automatically determining the URL conf.
@@ -43,11 +43,21 @@ order_item_router.register(r'order_items',
                            OrderItemViewSet,
                            basename='order_items'
                            )
-
+product_media_router = routers.NestedDefaultRouter(
+    router,
+    r'products',
+    lookup='product'
+)
+product_media_router.register(
+    r'media',
+    ProductMediaViewSet,
+    basename='media'
+)
 urlpatterns = [
     path('', include(router.urls)),
     path('', include(order_item_router.urls)),
     path('', include(comments_router.urls)),
+    path('', include(product_media_router.urls)),
     path('admin/', admin.site.urls),
     path('auth/', include('auth.urls')),
 ]

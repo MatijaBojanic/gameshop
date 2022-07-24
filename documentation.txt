@@ -1,0 +1,84 @@
+Categories:
+--Examples--
+
+    {
+        "id": 1,
+        "parent": null,
+        "name": "General Parent Category"
+    },
+    {
+        "id": 2,
+        "parent": {
+            "id": 1,
+            "name": "General Parent Category"
+        },
+        "name": "General Child Category"
+    },
+
+parent - Stands for parent category. Parent categories have parent left at null, while children have parent filled with id of the parent category.
+
+!!!NOTE: It does support deep/multilevel nesting, but by convention we should stick to a 2-tier approach, that is that a node should never be a child and a parent at the same time.
+
+--Routes--
+	GET: /categories/
+		- Returns all categories.
+	GET: /categories/{categoryId}/
+		-- Returns category with id of categoryId 
+	POST: /categories/
+		- Create a category. To be able to create a category, authentication for admin needs to be used.
+		Admin auth needed.
+		
+		Requeired params: name, parent. Parent is nullable, and if given must be an id of an already existing category.
+
+	PUT: /categories/{categoryId}/
+		-- Changes an existing category with id of categoryId (from url). 
+		Admin auth needed.
+	
+		Required params: name, parent
+
+	PATCH: /categories/{categoryId}/
+		--Changes partialy a category iwth id of categoryId (from url). While put expects the whole object to be sent, patch allows only some parts of the obj to be sent.
+		Admin auth needed.
+
+	DELETE: /categories/{categoryId}/
+		-- Deletes the category. 
+		Admin auth needed.
+
+
+Product:
+--Examples--
+{
+        "id": 33,
+        "categories": [
+            {
+                "id": 1,
+                "parent": null,
+                "name": "HAHA AGAIN"
+            }
+        ],
+        "media": [
+            {
+                "id": 11,
+                "media": "http://localhost:85/media/media/howToPlay1_C3dIJXW.jpg",
+                "product": 33
+            },
+            {
+                "id": 12,
+                "media": "http://localhost:85/media/media/howToPlay2_xNT7JjT.jpg",
+                "product": 33
+            }
+        ],
+        "name": "product 22",
+        "content": "whatever",
+        "created": "2022-07-24",
+        "updated": "2022-07-24"
+    },
+
+--Routes--
+
+	GET: /products/   Index,  vraca listu produkata
+	GET: /products/{Id}/  Show, vraca detalje jednoga produkta
+	POST: /products/   Kreira produkt
+	PUT: /products/{Id}/  Azurira produkt
+	PATCH: /products/{Id}/  Azurira samo dio produkta
+	DELETE: /products/{Id}/  Obrise produkt

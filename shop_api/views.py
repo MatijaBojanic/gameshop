@@ -1,8 +1,8 @@
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.viewsets import ModelViewSet
-from .serializers import ProductShowSerializer, ProductCreateSerializer, CommentSerializer, CategoryShowSerializer, \
-    CategoryCreateSerializer, OrderSerializer, OrderItemSerializer, WishListShowSerializer, WishListCreateSerializer
-from .models import Product, Comment, Category, Order, OrderItem, WishList
+from .serializers import ProductShowSerializer,ProductDetailsSerializer, ProductCreateSerializer, CommentSerializer, CategoryShowSerializer, \
+    CategoryCreateSerializer, OrderSerializer, OrderItemSerializer, WishListShowSerializer, WishListCreateSerializer, ProductMediaSerializer
+from .models import Product, Comment, Category, Order, OrderItem, WishList, ProductMedia
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, IsAdminUser, SAFE_METHODS, \
     BasePermission
 
@@ -12,6 +12,22 @@ class ReadOnly(BasePermission):
     def has_permission(self, request, view):
         return request.method in SAFE_METHODS
 
+class ProductMediaViewSet(ModelViewSet):
+    permission_classes = [IsAdminUser | ReadOnly]
+    serializer_class = ProductMediaSerializer
+    queryset = ProductMedia.objects.all()
+
+    def get_queryset(self, *args, **kwargs):
+        product_id = self.kwargs.get("product_pk")
+        print(product_id)
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            raise NotFound('A product with this id does not exist')
+        return self.queryset.filter(product=product)
+
+    def perform_create(self, serializer):
+        serializer.save(product=Product.objects.get(id=self.kwargs.get("product_pk")))
 
 class ProductViewSet(ModelViewSet):
     permission_classes = [IsAdminUser | ReadOnly]
@@ -20,7 +36,8 @@ class ProductViewSet(ModelViewSet):
         'create': ProductCreateSerializer,
         'update': ProductCreateSerializer,
         'partial_update': ProductCreateSerializer,
-        'destroy': ProductCreateSerializer
+        'destroy': ProductCreateSerializer,
+        'retrieve': ProductDetailsSerializer,
     }
     default_serializer_class = ProductShowSerializer
 
@@ -28,8 +45,18 @@ class ProductViewSet(ModelViewSet):
         return self.serializer_classes.get(self.action, self.default_serializer_class)
 
 
+class IsCommentOwner(BasePermission):
+    # for view permission
+    def has_permission(self, request, view):
+        return True
+
+    # for object level permissions
+    def has_object_permission(self, request, view, comment):
+        return request.method in SAFE_METHODS or comment.user.id == request.user.id or request.user.is_staff
+
+
 class CommentViewSet(ModelViewSet):
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly, IsCommentOwner]
     serializer_class = CommentSerializer
     queryset = Comment.objects.all()
 
@@ -45,6 +72,8 @@ class CommentViewSet(ModelViewSet):
         serializer.save(product=Product.objects.get(id=self.kwargs.get("product_pk")),
                         user=self.request.user
                         )
+
+
 
 
 class CategoryViewSet(ModelViewSet):

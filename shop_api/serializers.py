@@ -1,5 +1,6 @@
 from .models import Product, Comment, User, Category, OrderItem, Order, WishList, ProductMedia
 from rest_framework import serializers
+from django.db.models import Avg
 
 
 class SubCategorySerializer(serializers.ModelSerializer):
@@ -28,12 +29,39 @@ class ProductMediaSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class CommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = '__all__'
+
+
 class ProductShowSerializer(serializers.ModelSerializer):
     """
     Shows product, by loading category name instead of showing its id
     """
     categories = CategoryShowSerializer(many=True)
     media = ProductMediaSerializer(many=True)
+    review_score = serializers.SerializerMethodField('get_review_score')
+
+    def get_review_score(self, obj):
+        return Comment.objects.filter(product=obj.id).aggregate(Avg('review_score'))['review_score__avg'] or 0
+
+    class Meta:
+        model = Product
+        fields = '__all__'
+
+
+class ProductDetailsSerializer(serializers.ModelSerializer):
+    """
+    Shows product, by loading category name instead of showing its id
+    """
+    categories = CategoryShowSerializer(many=True)
+    media = ProductMediaSerializer(many=True)
+    comments = CommentSerializer(many=True)
+    review_score = serializers.SerializerMethodField('get_review_score')
+
+    def get_review_score(self, obj):
+        return Comment.objects.filter(product=obj.id).aggregate(Avg('review_score'))['review_score__avg'] or 0
 
     class Meta:
         model = Product
@@ -75,10 +103,7 @@ class UserSerializer(serializers.ModelSerializer):
                    'last_login']
 
 
-class CommentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Comment
-        fields = '__all__'
+
 
 
 class OrderSerializer(serializers.ModelSerializer):
