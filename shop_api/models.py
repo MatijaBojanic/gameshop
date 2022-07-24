@@ -28,6 +28,18 @@ class Product(models.Model):
         return self.name
 
 
+class ProductMedia(models.Model):
+    media = models.FileField(upload_to='/media')
+    product = models.ForeignKey(Product,
+                                  on_delete=models.CASCADE,
+                                  related_name='product',
+                                  related_query_name='product',
+                                  blank=True)
+
+    def __str__(self):
+        return self.media.name
+
+
 class Comment(models.Model):
     content = models.TextField()
     product = models.ForeignKey(Product,
