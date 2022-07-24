@@ -1,4 +1,4 @@
-from .models import Product, Comment, User, Category, OrderItem, Order, WishList
+from .models import Product, Comment, User, Category, OrderItem, Order, WishList, ProductMedia
 from rest_framework import serializers
 
 
@@ -22,11 +22,18 @@ class CategoryCreateSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class ProductMediaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductMedia
+        fields = '__all__'
+
+
 class ProductShowSerializer(serializers.ModelSerializer):
     """
     Shows product, by loading category name instead of showing its id
     """
     categories = CategoryShowSerializer(many=True)
+    media = ProductMediaSerializer(many=True)
 
     class Meta:
         model = Product
@@ -37,10 +44,21 @@ class ProductCreateSerializer(serializers.ModelSerializer):
     """
     Instead of requiring a dictionary for setting up category relations, here we enable creation by category id
     """
+    media = ProductMediaSerializer(source='media_set', many=True, read_only=True)
 
     class Meta:
         model = Product
         fields = '__all__'
+
+    def create(self, validated_data):
+        media_data = self.context.get('view').request.FILES
+        categories = validated_data.pop('categories', [])
+        product = Product.objects.create(**validated_data)
+        product.categories.set(categories)
+        for single_media_data in media_data:
+            file_data = media_data[single_media_data]
+            ProductMedia.objects.create(product=product, media=file_data)
+        return product
 
 
 class UserSerializer(serializers.ModelSerializer):

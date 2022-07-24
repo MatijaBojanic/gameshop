@@ -32,8 +32,8 @@ class ProductMedia(models.Model):
     media = models.FileField(upload_to='media/')
     product = models.ForeignKey(Product,
                                   on_delete=models.CASCADE,
-                                  related_name='product',
-                                  related_query_name='product',
+                                  related_name='media',
+                                  related_query_name='media',
                                   blank=True)
 
     def __str__(self):
