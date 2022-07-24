@@ -29,7 +29,7 @@ class Product(models.Model):
 
 
 class ProductMedia(models.Model):
-    media = models.FileField(upload_to='/media')
+    media = models.FileField(upload_to='media/')
     product = models.ForeignKey(Product,
                                   on_delete=models.CASCADE,
                                   related_name='product',
