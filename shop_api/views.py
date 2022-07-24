@@ -62,17 +62,6 @@ class CategoryViewSet(ModelViewSet):
     def get_serializer_class(self):
         return self.serializer_classes.get(self.action, self.default_serializer_class)
 
-    def get_queryset(self, *args, **kwargs):
-        product_id = self.kwargs.get("product_pk")
-        try:
-            product = Product.objects.get(id=product_id)
-        except Product.DoesNotExist:
-            raise NotFound('A product with this id does not exist')
-        return self.queryset.filter(product=product)
-
-    def perform_create(self, serializer):
-        serializer.save(product=Product.objects.get(id=self.kwargs.get("product_pk")))
-
 
 class OrderViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
