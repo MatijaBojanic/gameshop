@@ -17,6 +17,7 @@ class Product(models.Model):
     content = models.TextField()
     created = models.DateField(auto_now_add=True)
     updated = models.DateField(auto_now=True)
+    price = models.DecimalField(decimal_places=4, max_digits=15, default=0)
     categories = models.ManyToManyField(Category,
                                         related_name='categories',
                                         related_query_name='categories')
@@ -70,6 +71,7 @@ class Order(models.Model):
                              related_name='orders',
                              related_query_name='orders',
                              blank=True)
+    price = models.DecimalField(decimal_places=4, max_digits=15, default=0)
 
 
 class OrderItem(models.Model):
@@ -86,6 +88,7 @@ class OrderItem(models.Model):
                               related_name='order_items',
                               related_query_name='order_items',
                               blank=True)
+    price = models.DecimalField(decimal_places=4, max_digits=15, default=0)
 
 
 class WishList(models.Model):

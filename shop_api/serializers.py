@@ -103,13 +103,19 @@ class UserSerializer(serializers.ModelSerializer):
                    'last_login']
 
 
-
-
-
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = '__all__'
+        read_only_fields = ['user']
+
+    def create(self, validated_data):
+        if Order.objects.filter(user=self.context["request"].user,
+                                checkout_date=None).exists():
+            return Order.objects.get(user=self.context["request"].user,
+                                checkout_date=None)
+        user_attributes = Order.objects.create(**validated_data)
+        return user_attributes
 
 
 class OrderItemSerializer(serializers.ModelSerializer):

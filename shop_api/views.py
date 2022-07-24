@@ -12,6 +12,7 @@ class ReadOnly(BasePermission):
     def has_permission(self, request, view):
         return request.method in SAFE_METHODS
 
+
 class ProductMediaViewSet(ModelViewSet):
     permission_classes = [IsAdminUser | ReadOnly]
     serializer_class = ProductMediaSerializer
@@ -28,6 +29,7 @@ class ProductMediaViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(product=Product.objects.get(id=self.kwargs.get("product_pk")))
+
 
 class ProductViewSet(ModelViewSet):
     permission_classes = [IsAdminUser | ReadOnly]
@@ -74,8 +76,6 @@ class CommentViewSet(ModelViewSet):
                         )
 
 
-
-
 class CategoryViewSet(ModelViewSet):
     permission_classes = [IsAdminUser | ReadOnly]
     queryset = Category.objects.all()
@@ -92,8 +92,19 @@ class CategoryViewSet(ModelViewSet):
         return self.serializer_classes.get(self.action, self.default_serializer_class)
 
 
+class AdminOrNotCheckedOut(BasePermission):
+    # for object level permissions
+    def has_object_permission(self, request, view, order):
+        return (order.user.id == request.user.id
+                and (
+                    (request.method not in SAFE_METHODS
+                     and order.checkout_date == None)
+                    or request.method in SAFE_METHODS)) \
+               or request.user.is_staff
+
+
 class OrderViewSet(ModelViewSet):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, AdminOrNotCheckedOut]
     serializer_class = OrderSerializer
 
     def get_queryset(self):
