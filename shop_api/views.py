@@ -116,8 +116,19 @@ class OrderViewSet(ModelViewSet):
         serializer.save(user=self.request.user)
 
 
+class AdminOrNotCheckedOutOrder(BasePermission):
+    # for object level permissions
+    def has_object_permission(self, request, view, order_item):
+        return (order_item.order.user.id == request.user.id
+                and (
+                    (request.method not in SAFE_METHODS
+                     and order_item.order.checkout_date == None)
+                    or request.method in SAFE_METHODS)) \
+               or request.user.is_staff
+
+
 class OrderItemViewSet(ModelViewSet):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, AdminOrNotCheckedOutOrder]
     serializer_class = OrderItemSerializer
     queryset = OrderItem.objects.all()
 

@@ -104,10 +104,22 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    price = serializers.SerializerMethodField('get_price')
+
+    def get_price(self, obj):
+        if obj.checkout_date:
+            return obj.price
+        order_items = OrderItem.objects.filter(order=obj.id)
+        price = 0
+        for order_item in order_items:
+            price += Product.objects.get(id=order_item.product.id).price \
+                     * order_item.quantity * (100 - order_item.discount) / 100
+        return price
+
     class Meta:
         model = Order
         fields = '__all__'
-        read_only_fields = ['user']
+        read_only_fields = ['price']
 
     def create(self, validated_data):
         if Order.objects.filter(user=self.context["request"].user,
@@ -117,11 +129,30 @@ class OrderSerializer(serializers.ModelSerializer):
         user_attributes = Order.objects.create(**validated_data)
         return user_attributes
 
+    def update(self, instance, validated_data):
+        if not instance.checkout_date and validated_data.get('checkout_date', instance.checkout_date):
+            instance.price = self.get_price(instance)
+            order_items = OrderItem.objects.filter(order=instance.id)
+            for order_item in order_items:
+                order_item.price = Product.objects.get(id=order_item.product.id).price \
+                         * order_item.quantity * (100 - order_item.discount) / 100
+                order_item.save()
+        instance = super().update(instance, validated_data)
+        return instance
+
 
 class OrderItemSerializer(serializers.ModelSerializer):
+    price = serializers.SerializerMethodField('get_price')
+
+    def get_price(self, obj):
+        if obj.order.checkout_date:
+            return obj.price
+        return Product.objects.get(id=obj.product.id).price * obj.quantity * (100 - obj.discount)/100
+
     class Meta:
         model = OrderItem
         fields = '__all__'
+        read_only_fields = ['price']
 
 
 class WishListShowSerializer(serializers.ModelSerializer):
