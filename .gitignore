@@ -1,10 +1,15 @@
 gameshop_uwsgi.ini
 
+# Pycache fixes
+gameshop/__pycache__/
+shop_api/migrations/__pycache__/
+
 # Django #
 *.log
 *.pot
 *.pyc
 __pycache__
+__pycache__/
 db.sqlite3
 media
 
