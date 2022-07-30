@@ -1,0 +1,240 @@
+Categories:
+--Examples--
+
+    {
+        "id": 1,
+        "parent": null,
+        "name": "General Parent Category"
+    },
+    {
+        "id": 2,
+        "parent": {
+            "id": 1,
+            "name": "General Parent Category"
+        },
+        "name": "General Child Category"
+    },
+
+parent - Stands for parent category. Parent categories have parent left at null, while children have parent filled with id of the parent category.
+
+!!!NOTE: It does support deep/multilevel nesting, but by convention we should stick to a 2-tier approach, that is that a node should never be a child and a parent at the same time.
+
+--Routes--
+	GET: /categories/
+		- Returns all categories.
+	GET: /categories/{categoryId}/
+		-- Returns category with id of categoryId 
+	POST: /categories/
+		- Create a category. To be able to create a category, authentication for admin needs to be used.
+		Admin auth needed.
+		
+		Requeired params: name, parent. Parent is nullable, and if given must be an id of an already existing category.
+
+	PUT: /categories/{categoryId}/
+		-- Changes an existing category with id of categoryId (from url). 
+		Admin auth needed.
+	
+		Required params: name, parent
+
+	PATCH: /categories/{categoryId}/
+		--Changes partialy a category iwth id of categoryId (from url). While put expects the whole object to be sent, patch allows only some parts of the obj to be sent.
+		Admin auth needed.
+
+	DELETE: /categories/{categoryId}/
+		-- Deletes the category. 
+		Admin auth needed.
+
+
+Product:
+--Examples--
+{
+        "id": 33,
+        "categories": [
+            {
+                "id": 1,
+                "parent": null,
+                "name": "HAHA AGAIN"
+            }
+        ],
+        "media": [
+            {
+                "id": 11,
+                "media": "http://localhost:8087/media/media/howToPlay1_C3dIJXW.jpg",
+                "product": 33
+            },
+            {
+                "id": 12,
+                "media": "http://localhost:8087/media/media/howToPlay2_xNT7JjT.jpg",
+                "product": 33
+            }
+        ],
+        "review_score": 0,
+        "name": "product 22",
+        "content": "whatever",
+        "created": "2022-07-24",
+        "updated": "2022-07-24"
+    },
+
+{
+    "id": 1,
+    "categories": [],
+    "media": [],
+    "comments": [
+        {
+            "id": 4,
+            "content": "just some product description idk and lorem ipsum",
+            "created": "2022-07-14",
+            "updated": "2022-07-14",
+            "review_score": 3,
+            "product": 1,
+            "user": 3
+        }
+    ],
+    "review_score": 3.0,
+    "name": "test product 1",
+    "content": "just some product description idk",
+    "created": "2022-07-13",
+    "updated": "2022-07-13"
+}
+
+--Routes--
+
+	GET: /products/   
+		- Returns all products. Comments are not loaded.
+	GET: /products/{productId}/ 
+		- Returns product with its comments.
+	POST: /products/
+		-- Creates a new product. If files are provided, it also creates productMedia.
+		Admin auth required.
+		
+		Required params: name, content, categories
+		Optional params: files (store media files from request as ProductMedia)
+	PUT: /products/{productId}/  
+		-- Changes a product with id equal to productId from url
+		Admin auth required.
+!!! Note: Route will not add more media or change existing. If you want to add/remove/change media do it on proper urls.
+	PATCH: /products/{productId}/  
+		-- Parital update of a product with id equal to productId from url
+		Admin auth required.
+	DELETE: /products/{productId}/
+		-- Deletes product with id equal to productId from url
+		Admin auth required.
+
+
+
+ProductMedia:
+--Example--
+{
+    "id": 32,
+    "media": "http://localhost:8087/media/media/aboutUsBackground.jpg",
+    "product": 47
+}
+
+-- Routes -- 
+
+	GET: /products/{productId}/media/
+		-- Returns all media for Product with id of productId
+	GET: /products/{productId}/media/{mediaId}/
+		-- Returns media with id of mediaId. It must be related to the Product with id of productId
+	POST: /products/{productId}/media/
+		-- Creates ProductMedia for product with id of productsId.
+		required params: media
+		
+		Admin auth required
+	PUT: /products/{productId}/media/{mediaId}/
+		-- Change media with id of mediaId for product with id of productId
+		required params: media
+
+		Admin auth required.
+	PATCH: /products/{productId}/media/{mediaId}/
+		-- Partialy update media with id of mediaId for product with id of productId
+		
+		Admin auth required.
+	DELETE:/products/{productId}/media/{mediaId}/
+		-- Delete media with id of mediaId for product with id of productId
+
+ 
+Comment:
+--Example--
+
+
+{
+    "id": 6,
+    "content": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.",
+    "created": "2022-07-24",
+    "updated": "2022-07-24",
+    "review_score": 5,
+    "product": 47,
+    "user": 3
+},
+
+-- Routes -- 
+	
+	GET: /products/{productId}/comments/
+                -- Returns all comments for Product with id of productId
+        GET: /products/{productId}/comments/{commentId}/
+                -- Returns the comment with id of commentId. It must be related to the Product with id of productId
+        POST: /products/{productId}/comments/
+                -- Creates a comment for product with id of productsId.
+                required params: content
+
+                Admin or User auth required
+
+        PUT: /products/{productId}/comments/{commentId}/
+                -- Change comment with id of commentId for product with id of productId
+                required params: content
+
+                Admin or User auth required.
+        PATCH: /products/{productId}/comments/{commentId}/
+                -- Partialy update comment with id of commentId for product with id of productId
+
+                Admin or Userauth required.
+        DELETE:/products/{productId}/comments/{commentId}/
+                -- Delete comment with id of commentId for product with id of productId 
+
+	
+	!!! For PUT/PATCH/DELETE if auth as a regular user, you can only manipulate comments that you have made.
+
+
+Order:
+--Example--
+
+
+--Routes--
+	GET: /orders/
+		-- Returns either all orders (admin case) or orders for this user
+	
+		Admin or User auth required
+	GET: /orders/{orderId}/
+		-- Returns single order. User can only see his orders while admin can see every order.
+
+		Admin or User auth required
+
+	POST: /orders/
+		-- Creates an order. If an open order (where checkout_date is null) already exists for the user making the request, instead it will return that order
+		
+		
+		Admin or User auth required	
+	
+	PUT: /orders/{orderId}/
+		-- Changes order fully. Only admin can change checked out orders. User can only change his own
+	
+		Admin or User auth required
+	
+	PATCH: /orders/{orderId}/
+		-- Partialy update order. Same rule as for the order itself applies
+	
+!!! Can NOT change user on order
+	
+	DELETE: /orders/{orderId}/
+		-- Admin can delete everything, user can only delete his order, that doesnt have a checkout_date
+		
+		Admin or User auth required.
+
+	
+OrderItem:
+	
+
+
+WishList:
+
