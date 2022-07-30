@@ -46,12 +46,14 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'shop_api',
+    "corsheaders",
 
     'storages',
 
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -159,3 +161,5 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media/")
 # AWS_S3_REGION_NAME = env('AWS_S3_REGION_NAME')
 # AWS_S3_SIGNATURE_VERSION = env('AWS_S3_SIGNATURE_VERSION')
 # AWS_S3_ADDRESSING_STYLE = env('AWS_S3_ADDRESSING_STYLE')
+
+CORS_ALLOW_ALL_ORIGINS = True
