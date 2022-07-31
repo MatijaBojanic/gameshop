@@ -198,7 +198,22 @@ Comment:
 
 Order:
 --Example--
-
+    {
+        "id": 20,
+        "price": 6.51,
+        "order_items": [
+            {
+                "id": 38,
+                "price": 7.0,
+                "discount": 7.0,
+                "quantity": 1,
+                "product": 1,
+                "order": 20
+            }
+        ],
+        "checkout_date": null,
+        "user": 2
+    }
 
 --Routes--
 	GET: /orders/
@@ -230,14 +245,52 @@ Order:
 		-- Admin can delete everything, user can only delete his order, that doesnt have a checkout_date
 		
 		Admin or User auth required.
-
+	PATCH: /orders/{orderId/checkout/
+		-- Checkes out the order, calculates its price, and saves discount and price from product on the order item. This way changes to products after this point will not impact order items created in the past, and the order itself.
 	
 OrderItem:
-	
+	GET: /orders/{orderId}/order_items/
+		-- Returns all order items for that order. A user can only see his own, admin can see everyone's orders.
+		Admin or user authentication required.
+	GET: /orders/{orderId}/order_items/{orderItemId}
+		-- Returns specific oreder item for that order
+		Admin or user authentication required.
+	POST:/orders/{orderId}/order_items/
+		-- Creates order item for that order.
+		required params: product, quantity
+	PATCH:/orders/{orderId}/order_items/{orderItemId}
+		-- Partialy updates order item
+	PUT:/orders/{orderId}/order_items/{orderItemId}
+		-- Full update of an order item
+		required params: product, quantity
+	DELETE:/orders/{orderId}/order_items/{orderItemId}
+		-- Deletes an order item
+
+	!!!! NOTE: User can change order items, by adding new ones, deleting old ones, changing quantity on the order. They cant change the price or discount, it gets picked up from the product entity.
+		The user can do this up until the order gets checked out. After that user can only GET order items.
+		Admin can change the checked out order items, and this causes recalculations on the order.
+		Order item discount and price get picked up from the product in the moment of checking out.
 
 
 WishList:
-
+	GET: /wishlist/
+		-- Returns list of wishlists for current user. Admin retrives all wishlists, user retrives single wishlist, but its still a collection
+		Admin or user authentication required
+	POST: /wishlist/
+		-- Creates a wishlist. Throw serror if it already exists.
+		required params: products (array of ids)
+		Admin or user authentication required
+	PATCH: /wishlist/{wishlistId}
+		-- Updates wishlist with id of wishlistId
+		required params: products
+		Admin or user authentication required
+	PUT: /wishlist/{wishlistId}
+		-- Full update of wishlist
+		required params: products
+		Admin or user authentication required
+	DELETE: /wishlist/{wishlistId}
+		-- Deletes the wishlist. Should be used to clear a list fully.
+		Admin or user authentication required
 
 
 
