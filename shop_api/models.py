@@ -18,6 +18,10 @@ class Product(models.Model):
     created = models.DateField(auto_now_add=True)
     updated = models.DateField(auto_now=True)
     price = models.DecimalField(decimal_places=4, max_digits=15, default=0)
+    discount = models.DecimalField(decimal_places=2,
+                                   max_digits=5,
+                                   default=0,
+                                   validators=[MaxValueValidator(100), MinValueValidator(0)])
     categories = models.ManyToManyField(Category,
                                         related_name='categories',
                                         related_query_name='categories')
@@ -76,7 +80,8 @@ class Order(models.Model):
 
 class OrderItem(models.Model):
     discount = models.DecimalField(decimal_places=2,
-                                   max_digits=3,
+                                   max_digits=5,
+                                   default=0,
                                    validators=[MaxValueValidator(100), MinValueValidator(0)])
     quantity = models.IntegerField(validators=[MinValueValidator(0)])
     product = models.ForeignKey(Product,

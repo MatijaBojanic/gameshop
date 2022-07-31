@@ -103,8 +103,23 @@ class UserSerializer(serializers.ModelSerializer):
                    'last_login']
 
 
+class OrderItemSerializer(serializers.ModelSerializer):
+    price = serializers.SerializerMethodField('get_price')
+
+    def get_price(self, obj):
+        if obj.order.checkout_date:
+            return obj.price
+        return Product.objects.get(id=obj.product.id).price * obj.quantity * (100 - obj.discount)/100
+
+    class Meta:
+        model = OrderItem
+        fields = '__all__'
+        read_only_fields = ['price']
+
+
 class OrderSerializer(serializers.ModelSerializer):
     price = serializers.SerializerMethodField('get_price')
+    order_items = OrderItemSerializer(many=True, read_only=True)
 
     def get_price(self, obj):
         if obj.checkout_date:
@@ -139,20 +154,6 @@ class OrderSerializer(serializers.ModelSerializer):
                 order_item.save()
         instance = super().update(instance, validated_data)
         return instance
-
-
-class OrderItemSerializer(serializers.ModelSerializer):
-    price = serializers.SerializerMethodField('get_price')
-
-    def get_price(self, obj):
-        if obj.order.checkout_date:
-            return obj.price
-        return Product.objects.get(id=obj.product.id).price * obj.quantity * (100 - obj.discount)/100
-
-    class Meta:
-        model = OrderItem
-        fields = '__all__'
-        read_only_fields = ['price']
 
 
 class WishListShowSerializer(serializers.ModelSerializer):
