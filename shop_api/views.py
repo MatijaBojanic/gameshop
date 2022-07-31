@@ -1,11 +1,16 @@
 from rest_framework.exceptions import NotFound, ValidationError
-from rest_framework.viewsets import ModelViewSet
-from .serializers import ProductShowSerializer,ProductDetailsSerializer, ProductCreateSerializer, CommentSerializer, CategoryShowSerializer, \
-    CategoryCreateSerializer, OrderSerializer, OrderItemSerializer, WishListShowSerializer, WishListCreateSerializer, ProductMediaSerializer
+from rest_framework.viewsets import ModelViewSet, GenericViewSet
+from .serializers import ProductShowSerializer, ProductDetailsSerializer, ProductCreateSerializer, CommentSerializer, \
+    CategoryShowSerializer, \
+    CategoryCreateSerializer, OrderSerializer, OrderItemSerializer, WishListShowSerializer, WishListCreateSerializer, \
+    ProductMediaSerializer
 from .models import Product, Comment, Category, Order, OrderItem, WishList, ProductMedia
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, IsAdminUser, SAFE_METHODS, \
     BasePermission
-
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework import status, mixins
+from django.utils import timezone
 
 # Create your views here.
 class ReadOnly(BasePermission):
@@ -103,7 +108,17 @@ class AdminOrNotCheckedOut(BasePermission):
                or request.user.is_staff
 
 
-class OrderViewSet(ModelViewSet):
+class AdminOrOwner(BasePermission):
+    # for object level permissions
+    def has_object_permission(self, request, view, order):
+        return order.user.id == request.user.id or request.user.is_staff
+
+
+class OrderViewSet(mixins.CreateModelMixin,
+                   mixins.ListModelMixin,
+                   mixins.RetrieveModelMixin,
+                   mixins.DestroyModelMixin,
+                   GenericViewSet):
     permission_classes = [IsAuthenticated, AdminOrNotCheckedOut]
     serializer_class = OrderSerializer
 
@@ -114,6 +129,26 @@ class OrderViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+    @action(detail=True, methods=['patch'], permission_classes=[IsAuthenticated, AdminOrOwner])
+    def checkout(self, request, pk=None):
+        order = self.get_object()
+        if order.checkout_date:
+            return Response({'checkout': 'Order is already checked out'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            order.checkout_date = timezone.now().date()
+            order_items = OrderItem.objects.filter(order=order.id)
+            price = 0
+            for order_item in order_items:
+                order_item.discount = Product.objects.get(id=order_item.product.id).discount
+                order_item.price = Product.objects.get(id=order_item.product.id).price \
+                    * order_item.quantity * (100 - order_item.discount) / 100
+                order_item.save()
+                price += order_item.price
+            order.price = price
+            order.save()
+
+        return Response(OrderSerializer(order).data)
 
 
 class AdminOrNotCheckedOutOrder(BasePermission):
@@ -168,4 +203,3 @@ class WishListViewSet(ModelViewSet):
                 raise ValidationError("Wishlist for this user already exists")
         except WishList.DoesNotExist:
             serializer.save(user=self.request.user)
-

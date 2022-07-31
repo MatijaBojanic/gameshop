@@ -1,5 +1,5 @@
 from .models import Product, Comment, User, Category, OrderItem, Order, WishList, ProductMedia
-from rest_framework import serializers
+from rest_framework import serializers, fields
 from django.db.models import Avg
 
 
@@ -143,17 +143,6 @@ class OrderSerializer(serializers.ModelSerializer):
                                 checkout_date=None)
         user_attributes = Order.objects.create(**validated_data)
         return user_attributes
-
-    def update(self, instance, validated_data):
-        if not instance.checkout_date and validated_data.get('checkout_date', instance.checkout_date):
-            instance.price = self.get_price(instance)
-            order_items = OrderItem.objects.filter(order=instance.id)
-            for order_item in order_items:
-                order_item.price = Product.objects.get(id=order_item.product.id).price \
-                         * order_item.quantity * (100 - order_item.discount) / 100
-                order_item.save()
-        instance = super().update(instance, validated_data)
-        return instance
 
 
 class WishListShowSerializer(serializers.ModelSerializer):
