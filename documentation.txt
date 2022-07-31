@@ -238,3 +238,28 @@ OrderItem:
 
 WishList:
 
+
+
+
+
+User:
+	POST: /auth/login/
+		-- Login current user. Returns refresh and access token.
+		Required params: username, password
+	POST: /auth/refresh/
+		-- Refresh acces token for user. Returns acces token.
+		Required params: refresh
+	POST: /auth/register/
+		--  Register a new user
+		Required params: username, password, password2, email, first_name, last_name
+		Will return error if username or email are taken, or if the password and password2 do not match, with the proper error msg
+	PATCH: /auth/update_profile/{userId}/
+		-- Updates user info. Admin can update anyone, regular users only themselves.
+	PUT: /auth/update_profile/{userId}/
+		-- Required params: username, email, first_name, last_name
+	PUT: /auth/change_password/{userId}/
+		-- Changes users password. User needs to be authenticated and know his old password. Admin can change every password, user only their own.
+		Required params: old_password, password, password2
+		Will return error if old_password doesnt match users password, or if password and password2 dont match
+	GET: /auth/current_user/
+		-- Returns id, username, email, first_name and last_name for the user making the request.

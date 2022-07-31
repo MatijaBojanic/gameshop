@@ -52,6 +52,13 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
         fields = ('old_password', 'password', 'password2')
 
     def validate(self, attrs):
+        if not attrs.get('password', None):
+            raise serializers.ValidationError({"password": "This field is required."})
+        if not attrs.get('password2', None):
+            raise serializers.ValidationError({"password2": "This field is required."})
+        if not attrs.get('old_password', None):
+            raise serializers.ValidationError({"old_password": "This field is required."})
+
         if attrs['password'] != attrs['password2']:
             raise serializers.ValidationError({"password": "Password fields didn't match."})
 
@@ -59,14 +66,14 @@ class ChangePasswordSerializer(serializers.ModelSerializer):
 
     def validate_old_password(self, value):
         user = self.context['request'].user
-        if not user.check_password(value):
+        if not user.check_password(value) and not user.is_staff:
             raise serializers.ValidationError({"old_password": "Old password is not correct"})
         return value
 
     def update(self, instance, validated_data):
         user = self.context['request'].user
 
-        if user.pk != instance.pk:
+        if user.pk != instance.pk and not user.is_staff:
             raise serializers.ValidationError({"authorize": "You dont have permission for this user."})
 
         instance.set_password(validated_data['password'])
@@ -95,19 +102,19 @@ class UpdateUserSerializer(serializers.ModelSerializer):
     def validate_username(self, value):
         user = self.context['request'].user
         if User.objects.exclude(pk=user.pk).filter(username=value).exists():
-            raise serializers.ValidationError({"username": "This username is already in use."})
+            raise serializers.ValidationError({"username": "This username is already taken."})
         return value
 
     def update(self, instance, validated_data):
         user = self.context['request'].user
 
-        if user.pk != instance.pk:
+        if user.pk != instance.pk and not user.is_staff:
             raise serializers.ValidationError({"authorize": "You dont have permission for this user."})
 
-        instance.first_name = validated_data['first_name']
-        instance.last_name = validated_data['last_name']
-        instance.email = validated_data['email']
-        instance.username = validated_data['username']
+        instance.first_name = validated_data.get('first_name', instance.first_name)
+        instance.last_name = validated_data.get('last_name', instance.last_name)
+        instance.email = validated_data.get('email', instance.email)
+        instance.username = validated_data.get('username', instance.username)
 
         instance.save()
 
@@ -117,5 +124,5 @@ class UpdateUserSerializer(serializers.ModelSerializer):
 class UserInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('username', 'first_name', 'last_name')
+        fields = ('id', 'username', 'first_name', 'last_name')
 
