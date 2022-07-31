@@ -196,15 +196,18 @@ class OrderSerializer(serializers.ModelSerializer):
 
 
 class WishListShowSerializer(serializers.ModelSerializer):
-    products = ProductCreateSerializer(many=True)
+    products = ProductShowSerializer(many=True)
 
     class Meta:
         model = WishList
         fields = '__all__'
+        read_only_fields = ['id','user']
 
 
 class WishListCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = WishList
         fields = '__all__'
+        read_only_fields=['id','user']
+
 

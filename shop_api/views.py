@@ -199,7 +199,11 @@ class OrderItemViewSet(ModelViewSet):
             order.price = price
             order.save()
 
+
 class WishListViewSet(ModelViewSet):
+    """
+    Create Update Partial Update Delete
+    """
     permission_classes = [IsAuthenticated]
     serializer_classes = {
         'create': WishListCreateSerializer,
