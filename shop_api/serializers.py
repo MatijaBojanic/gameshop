@@ -105,16 +105,65 @@ class UserSerializer(serializers.ModelSerializer):
 
 class OrderItemSerializer(serializers.ModelSerializer):
     price = serializers.SerializerMethodField('get_price')
+    discount = serializers.SerializerMethodField('get_discount')
 
     def get_price(self, obj):
         if obj.order.checkout_date:
             return obj.price
-        return Product.objects.get(id=obj.product.id).price * obj.quantity * (100 - obj.discount)/100
+        return Product.objects.get(id=obj.product.id).price
+
+    def get_discount(self, obj):
+        if obj.order.checkout_date:
+            return obj.discount
+        return Product.objects.get(id=obj.product.id).discount
+
+    def update(self, instance, validated_data):
+        if instance.order.checkout_date is None:
+            return super(OrderItemSerializer, self).update(instance, validated_data)
+        else:
+            instance.price = self.initial_data.get("price", instance.price)
+            instance.discount = self.initial_data.get("discount", instance.discount)
+            instance.quantity = self.initial_data.get("quantity", instance.quantity)
+            instance.product_id = self.initial_data.get("product_id", instance.product_id)
+            instance.save()
+            item = super(OrderItemSerializer, self).update(instance, validated_data)
+            order = instance.order
+            order_items = OrderItem.objects.filter(order=order.id)
+            price = 0
+            for order_item in order_items:
+                price += order_item.price \
+                         * order_item.quantity * (100 - order_item.discount) / 100
+            order.price = price
+            order.save()
+            return item
+
+    def create(self, validated_data):
+        print('test')
+        order = validated_data['order']
+        print(order.checkout_date)
+        if order.checkout_date is None:
+            return super(OrderItemSerializer, self).create(validated_data)
+        else:
+            item = super(OrderItemSerializer, self).create(validated_data)
+            item.price = self.initial_data.get("price", item.price)
+            item.discount = self.initial_data.get("discount", item.discount)
+            item.quantity = self.initial_data.get("quantity", item.quantity)
+            item.product_id = self.initial_data.get("product_id", item.product_id)
+            item.save()
+            order_items = OrderItem.objects.filter(order=order.id)
+            price = 0
+            for order_item in order_items:
+                price += order_item.price \
+                         * order_item.quantity * (100 - order_item.discount) / 100
+            order.price = price
+            order.save()
+            return item
+
 
     class Meta:
         model = OrderItem
         fields = '__all__'
-        read_only_fields = ['price']
+        read_only_fields = ['price', 'discount']
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -128,7 +177,8 @@ class OrderSerializer(serializers.ModelSerializer):
         price = 0
         for order_item in order_items:
             price += Product.objects.get(id=order_item.product.id).price \
-                     * order_item.quantity * (100 - order_item.discount) / 100
+                     * order_item.quantity * \
+                     (100 - Product.objects.get(id=order_item.product.id).discount) / 100
         return price
 
     class Meta:

@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework import status, mixins
 from django.utils import timezone
 
+
 # Create your views here.
 class ReadOnly(BasePermission):
     def has_permission(self, request, view):
@@ -141,10 +142,9 @@ class OrderViewSet(mixins.CreateModelMixin,
             price = 0
             for order_item in order_items:
                 order_item.discount = Product.objects.get(id=order_item.product.id).discount
-                order_item.price = Product.objects.get(id=order_item.product.id).price \
-                    * order_item.quantity * (100 - order_item.discount) / 100
+                order_item.price = Product.objects.get(id=order_item.product.id).price
                 order_item.save()
-                price += order_item.price
+                price += order_item.price * order_item.quantity * (100 - order_item.discount) / 100
             order.price = price
             order.save()
 
@@ -152,14 +152,21 @@ class OrderViewSet(mixins.CreateModelMixin,
 
 
 class AdminOrNotCheckedOutOrder(BasePermission):
-    # for object level permissions
+    def has_permission(self, request, view):
+        order_pk = request.parser_context['kwargs']['order_pk']
+        order = Order.objects.get(id=order_pk)
+        user_is_owner = order.user.id == request.user.id
+        is_safe_method = request.method in SAFE_METHODS
+        order_not_checked_out = order.checkout_date is None
+        return request.user.is_staff or \
+               (user_is_owner and (is_safe_method or (not is_safe_method and order_not_checked_out)))
+
     def has_object_permission(self, request, view, order_item):
-        return (order_item.order.user.id == request.user.id
-                and (
-                    (request.method not in SAFE_METHODS
-                     and order_item.order.checkout_date == None)
-                    or request.method in SAFE_METHODS)) \
-               or request.user.is_staff
+        user_is_owner =  order_item.order.user.id == request.user.id
+        is_safe_method = request.method in SAFE_METHODS
+        order_not_checked_out = order_item.order.checkout_date is None
+        return request.user.is_staff or \
+               (user_is_owner and (is_safe_method or (not is_safe_method and order_not_checked_out)))
 
 
 class OrderItemViewSet(ModelViewSet):
@@ -178,6 +185,19 @@ class OrderItemViewSet(ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(order=Order.objects.get(id=self.kwargs.get("order_pk")))
 
+    def perform_destroy(self, instance):
+        if instance.order.checkout_date is None:
+            instance.delete()
+        else:
+            instance.delete()
+            order = instance.order
+            order_items = OrderItem.objects.filter(order=order.id)
+            price = 0
+            for order_item in order_items:
+                price += order_item.price \
+                         * order_item.quantity * (100 - order_item.discount) / 100
+            order.price = price
+            order.save()
 
 class WishListViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
