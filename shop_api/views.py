@@ -180,7 +180,7 @@ class OrderItemViewSet(ModelViewSet):
         else:
             instance.delete()
             order = instance.order
-            order.calculate_prices()
+            order.calculate_prices(False)
 
 
 class WishListViewSet(ModelViewSet):

@@ -99,16 +99,35 @@ class OrderItemSerializer(serializers.ModelSerializer):
     discount = serializers.SerializerMethodField('get_discount')
 
     def get_price(self, obj):
+        """
+        If OI's order is not checked out, we need to fetch the current price from the product.
+        However, if the OI's order is checked out, we simply read it from the OI instance.
+        :param obj:
+        :return:
+        """
         if obj.order.checkout_date:
             return obj.price
         return Product.objects.get(id=obj.product.id).price
 
     def get_discount(self, obj):
+        """
+        If OI's order is not checked out, we need to fetch the current discount from the product.
+        However, if the OI's order is checked out, we simply read it from the OI instance.
+        :param obj:
+        :return:
+        """
         if obj.order.checkout_date:
             return obj.discount
         return Product.objects.get(id=obj.product.id).discount
 
     def update(self, instance, validated_data):
+        """
+        If order is not checked out do the regular update.
+        If order is checked out, only admins can edit it. After its edit, the order price needs to be recalculated.
+        :param instance:
+        :param validated_data:
+        :return:
+        """
         if instance.order.checkout_date is None:
             return super(OrderItemSerializer, self).update(instance, validated_data)
         else:
@@ -119,19 +138,19 @@ class OrderItemSerializer(serializers.ModelSerializer):
             instance.save()
             item = super(OrderItemSerializer, self).update(instance, validated_data)
             order = instance.order
-            order_items = OrderItem.objects.filter(order=order.id)
-            price = 0
-            for order_item in order_items:
-                price += order_item.price \
-                         * order_item.quantity * (100 - order_item.discount) / 100
-            order.price = price
-            order.save()
+            order.calculate_prices(False)
             return item
 
     def create(self, validated_data):
-        print('test')
+        """
+        If order is not checked out do the regular create.
+        If order is checked out, only admins can crate order items for it.
+        After its creation, the order price needs to be recalculated.
+
+        :param validated_data:
+        :return:
+        """
         order = validated_data['order']
-        print(order.checkout_date)
         if order.checkout_date is None:
             return super(OrderItemSerializer, self).create(validated_data)
         else:
@@ -141,13 +160,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
             item.quantity = self.initial_data.get("quantity", item.quantity)
             item.product_id = self.initial_data.get("product_id", item.product_id)
             item.save()
-            order_items = OrderItem.objects.filter(order=order.id)
-            price = 0
-            for order_item in order_items:
-                price += order_item.price \
-                         * order_item.quantity * (100 - order_item.discount) / 100
-            order.price = price
-            order.save()
+            order.calculate_prices(False)
             return item
 
 
@@ -192,13 +205,13 @@ class WishListShowSerializer(serializers.ModelSerializer):
     class Meta:
         model = WishList
         fields = '__all__'
-        read_only_fields = ['id','user']
+        read_only_fields = ['id', 'user']
 
 
 class WishListCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = WishList
         fields = '__all__'
-        read_only_fields=['id','user']
+        read_only_fields=['id', 'user']
 
 

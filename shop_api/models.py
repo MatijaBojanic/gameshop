@@ -77,13 +77,27 @@ class Order(models.Model):
                              blank=True)
     price = models.DecimalField(decimal_places=4, max_digits=15, default=0)
 
-    def calculate_prices(self):
+    def calculate_prices(self, refresh_order_info=True):
+        """
+        When the order gets checked_out, price and discount need to be fetched from the related product entity of each
+        order item, and locked. This way we lock the state of each order item to that specific point in time, i.e. the
+        checkout_date.
+        After that, we need to calculate the order price by summing each order_item.
+        Users can not change orders and order_items after the order gets checked out.
+
+        However, an admin can. In case an admin adds, delete, or changes the order_item we need to recalculate the order
+        price as well. But in case of edits, we need not re-fetch info from products as they will not be relevant.
+        (They could be changed in the period between the edit and the checkout_date)
+        :param refresh_order_info:
+        :return:
+        """
         order_items = OrderItem.objects.filter(order=self.id)
         price = 0
         for order_item in order_items:
-            order_item.discount = Product.objects.get(id=order_item.product.id).discount
-            order_item.price = Product.objects.get(id=order_item.product.id).price
-            order_item.save()
+            if refresh_order_info:
+                order_item.discount = Product.objects.get(id=order_item.product.id).discount
+                order_item.price = Product.objects.get(id=order_item.product.id).price
+                order_item.save()
             print("ORDER ITEM PRICE::")
             print(order_item.price)
             price += order_item.price * order_item.quantity * (100 - order_item.discount) / 100
