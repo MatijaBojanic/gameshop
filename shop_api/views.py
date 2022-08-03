@@ -201,9 +201,6 @@ class OrderItemViewSet(ModelViewSet):
 
 
 class WishListViewSet(ModelViewSet):
-    """
-    Create Update Partial Update Delete
-    """
     permission_classes = [IsAuthenticated]
     serializer_classes = {
         'create': WishListCreateSerializer,
