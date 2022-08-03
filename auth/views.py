@@ -1,6 +1,7 @@
 from django.shortcuts import render
-from .serializers import RegisterSerializer, ChangePasswordSerializer, UpdateUserSerializer, UserInfoSerializer
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from .serializers import RegisterSerializer, ChangePasswordSerializer, UpdateUserSerializer, UserInfoSerializer, \
+    UserAdminSerializer
+from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission
 from django.contrib.auth.models import User
 from rest_framework import generics, status
 from rest_framework.views import APIView
@@ -46,3 +47,26 @@ class UserInfoView(APIView):
     def get(self, request):
         user = UserInfoSerializer(request.user)
         return Response(user.data)
+
+
+class IsSuperuser(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_superuser
+
+
+class AdminView(generics.ListAPIView, generics.UpdateAPIView):
+    permission_classes = (IsSuperuser,)
+    serializer_class = UserAdminSerializer
+    queryset = User.objects.all()
+
+
+class ChangeStaffStatusView(generics.UpdateAPIView):
+    permission_classes = (IsSuperuser,)
+    serializer_class = UserAdminSerializer
+    queryset = User.objects.all()
+
+    def patch(self, request, *args, **kwargs):
+        user = self.get_object()
+        user.is_staff = not user.is_staff
+        user.save()
+        return Response(UserAdminSerializer(user).data)
