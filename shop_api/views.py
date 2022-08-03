@@ -54,11 +54,9 @@ class ProductViewSet(ModelViewSet):
 
 
 class IsCommentOwner(BasePermission):
-    # for view permission
     def has_permission(self, request, view):
         return True
 
-    # for object level permissions
     def has_object_permission(self, request, view, comment):
         return request.method in SAFE_METHODS or comment.user.id == request.user.id or request.user.is_staff
 
@@ -99,7 +97,6 @@ class CategoryViewSet(ModelViewSet):
 
 
 class AdminOrNotCheckedOut(BasePermission):
-    # for object level permissions
     def has_object_permission(self, request, view, order):
         return (order.user.id == request.user.id
                 and (
@@ -110,7 +107,6 @@ class AdminOrNotCheckedOut(BasePermission):
 
 
 class AdminOrOwner(BasePermission):
-    # for object level permissions
     def has_object_permission(self, request, view, order):
         return order.user.id == request.user.id or request.user.is_staff
 
