@@ -28,7 +28,7 @@ parent - Stands for parent category. Parent categories have parent left at null,
 		- Create a category. To be able to create a category, authentication for admin needs to be used.
 		Admin auth needed.
 		
-		Requeired params: name, parent. Parent is nullable, and if given must be an id of an already existing category.
+		Required params: name, parent. Parent is nullable, and if given must be an id of an already existing category.
 
 	PUT: /categories/{categoryId}/
 		-- Changes an existing category with id of categoryId (from url). 
@@ -37,7 +37,7 @@ parent - Stands for parent category. Parent categories have parent left at null,
 		Required params: name, parent
 
 	PATCH: /categories/{categoryId}/
-		--Changes partialy a category iwth id of categoryId (from url). While put expects the whole object to be sent, patch allows only some parts of the obj to be sent.
+		--Changes partially a category with id of categoryId (from url). While put expects the whole object to be sent, patch allows only some parts of the obj to be sent.
 		Admin auth needed.
 
 	DELETE: /categories/{categoryId}/
@@ -114,7 +114,7 @@ Product:
 		Admin auth required.
 !!! Note: Route will not add more media or change existing. If you want to add/remove/change media do it on proper urls.
 	PATCH: /products/{productId}/  
-		-- Parital update of a product with id equal to productId from url
+		-- Partial update of a product with id equal to productId from url
 		Admin auth required.
 	DELETE: /products/{productId}/
 		-- Deletes product with id equal to productId from url
@@ -147,7 +147,7 @@ ProductMedia:
 
 		Admin auth required.
 	PATCH: /products/{productId}/media/{mediaId}/
-		-- Partialy update media with id of mediaId for product with id of productId
+		-- Partially update media with id of mediaId for product with id of productId
 		
 		Admin auth required.
 	DELETE:/products/{productId}/media/{mediaId}/
@@ -186,9 +186,9 @@ Comment:
 
                 Admin or User auth required.
         PATCH: /products/{productId}/comments/{commentId}/
-                -- Partialy update comment with id of commentId for product with id of productId
+                -- Partially update comment with id of commentId for product with id of productId
 
-                Admin or Userauth required.
+                Admin or User auth required.
         DELETE:/products/{productId}/comments/{commentId}/
                 -- Delete comment with id of commentId for product with id of productId 
 
@@ -237,7 +237,7 @@ Order:
 		Admin or User auth required
 	
 	PATCH: /orders/{orderId}/
-		-- Partialy update order. Same rule as for the order itself applies
+		-- Partially update order. Same rule as for the order itself applies
 	
 !!! Can NOT change user on order
 	
@@ -246,20 +246,20 @@ Order:
 		
 		Admin or User auth required.
 	PATCH: /orders/{orderId/checkout/
-		-- Checkes out the order, calculates its price, and saves discount and price from product on the order item. This way changes to products after this point will not impact order items created in the past, and the order itself.
+		-- Checks out the order, calculates its price, and saves discount and price from product on the order item. This way changes to products after this point will not impact order items created in the past, and the order itself.
 	
 OrderItem:
 	GET: /orders/{orderId}/order_items/
 		-- Returns all order items for that order. A user can only see his own, admin can see everyone's orders.
 		Admin or user authentication required.
 	GET: /orders/{orderId}/order_items/{orderItemId}
-		-- Returns specific oreder item for that order
+		-- Returns specific order item for that order
 		Admin or user authentication required.
 	POST:/orders/{orderId}/order_items/
 		-- Creates order item for that order.
 		required params: product, quantity
 	PATCH:/orders/{orderId}/order_items/{orderItemId}
-		-- Partialy updates order item
+		-- Partially updates order item
 	PUT:/orders/{orderId}/order_items/{orderItemId}
 		-- Full update of an order item
 		required params: product, quantity
@@ -274,10 +274,10 @@ OrderItem:
 
 WishList:
 	GET: /wishlist/
-		-- Returns list of wishlists for current user. Admin retrives all wishlists, user retrives single wishlist, but its still a collection
+		-- Returns list of wishlists for current user. Admin retrieves all wishlists, user retrieves single wishlist, but its still a collection
 		Admin or user authentication required
 	POST: /wishlist/
-		-- Creates a wishlist. Throw serror if it already exists.
+		-- Creates a wishlist. Throws error if it already exists.
 		required params: products (array of ids)
 		Admin or user authentication required
 	PATCH: /wishlist/{wishlistId}
@@ -299,8 +299,8 @@ User:
 	POST: /auth/login/
 		-- Login current user. Returns refresh and access token.
 		Required params: username, password
-	POST: /auth/refresh/
-		-- Refresh acces token for user. Returns acces token.
+	POST: /auth/login/refresh/
+		-- Refresh access token for user. Returns access token.
 		Required params: refresh
 	POST: /auth/register/
 		--  Register a new user
