@@ -36,9 +36,6 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class ProductShowSerializer(serializers.ModelSerializer):
-    """
-    Shows product, by loading category name instead of showing its id
-    """
     categories = CategoryShowSerializer(many=True)
     media = ProductMediaSerializer(many=True)
     review_score = serializers.SerializerMethodField('get_review_score')
@@ -52,9 +49,6 @@ class ProductShowSerializer(serializers.ModelSerializer):
 
 
 class ProductDetailsSerializer(serializers.ModelSerializer):
-    """
-    Shows product, by loading category name instead of showing its id
-    """
     categories = CategoryShowSerializer(many=True)
     media = ProductMediaSerializer(many=True)
     comments = CommentSerializer(many=True)
@@ -69,9 +63,6 @@ class ProductDetailsSerializer(serializers.ModelSerializer):
 
 
 class ProductCreateSerializer(serializers.ModelSerializer):
-    """
-    Instead of requiring a dictionary for setting up category relations, here we enable creation by category id
-    """
     media = ProductMediaSerializer(source='media_set', many=True, read_only=True)
 
     class Meta:
