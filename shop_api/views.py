@@ -5,8 +5,8 @@ from .serializers import ProductShowSerializer, ProductDetailsSerializer, Produc
     CategoryCreateSerializer, OrderSerializer, OrderItemSerializer, WishListShowSerializer, WishListCreateSerializer, \
     ProductMediaSerializer
 from .models import Product, Comment, Category, Order, OrderItem, WishList, ProductMedia
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, IsAdminUser, SAFE_METHODS, \
-    BasePermission
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, IsAdminUser
+from auth.permissions import ReadOnly, IsCommentOwner,AdminOrNotCheckedOut, AdminOrNotCheckedOutOrder, AdminOrOwner
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status, mixins
@@ -14,10 +14,6 @@ from django.utils import timezone
 
 
 # Create your views here.
-class ReadOnly(BasePermission):
-    def has_permission(self, request, view):
-        return request.method in SAFE_METHODS
-
 
 class ProductMediaViewSet(ModelViewSet):
     permission_classes = [IsAdminUser | ReadOnly]
@@ -51,14 +47,6 @@ class ProductViewSet(ModelViewSet):
 
     def get_serializer_class(self):
         return self.serializer_classes.get(self.action, self.default_serializer_class)
-
-
-class IsCommentOwner(BasePermission):
-    def has_permission(self, request, view):
-        return True
-
-    def has_object_permission(self, request, view, comment):
-        return request.method in SAFE_METHODS or comment.user.id == request.user.id or request.user.is_staff
 
 
 class CommentViewSet(ModelViewSet):
@@ -96,21 +84,6 @@ class CategoryViewSet(ModelViewSet):
         return self.serializer_classes.get(self.action, self.default_serializer_class)
 
 
-class AdminOrNotCheckedOut(BasePermission):
-    def has_object_permission(self, request, view, order):
-        return (order.user.id == request.user.id
-                and (
-                    (request.method not in SAFE_METHODS
-                     and order.checkout_date == None)
-                    or request.method in SAFE_METHODS)) \
-               or request.user.is_staff
-
-
-class AdminOrOwner(BasePermission):
-    def has_object_permission(self, request, view, order):
-        return order.user.id == request.user.id or request.user.is_staff
-
-
 class OrderViewSet(mixins.CreateModelMixin,
                    mixins.ListModelMixin,
                    mixins.RetrieveModelMixin,
@@ -138,24 +111,6 @@ class OrderViewSet(mixins.CreateModelMixin,
             order.calculate_prices()
 
         return Response(OrderSerializer(order).data)
-
-
-class AdminOrNotCheckedOutOrder(BasePermission):
-    def has_permission(self, request, view):
-        order_pk = request.parser_context['kwargs']['order_pk']
-        order = Order.objects.get(id=order_pk)
-        user_is_owner = order.user.id == request.user.id
-        is_safe_method = request.method in SAFE_METHODS
-        order_not_checked_out = order.checkout_date is None
-        return request.user.is_staff or \
-               (user_is_owner and (is_safe_method or (not is_safe_method and order_not_checked_out)))
-
-    def has_object_permission(self, request, view, order_item):
-        user_is_owner =  order_item.order.user.id == request.user.id
-        is_safe_method = request.method in SAFE_METHODS
-        order_not_checked_out = order_item.order.checkout_date is None
-        return request.user.is_staff or \
-               (user_is_owner and (is_safe_method or (not is_safe_method and order_not_checked_out)))
 
 
 class OrderItemViewSet(ModelViewSet):

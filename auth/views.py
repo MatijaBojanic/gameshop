@@ -7,6 +7,7 @@ from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
+from auth.permissions import IsSuperuser
 
 
 class RegisterView(generics.CreateAPIView):
@@ -47,11 +48,6 @@ class UserInfoView(APIView):
     def get(self, request):
         user = UserInfoSerializer(request.user)
         return Response(user.data)
-
-
-class IsSuperuser(BasePermission):
-    def has_permission(self, request, view):
-        return request.user.is_superuser
 
 
 class AdminView(generics.ListAPIView, generics.UpdateAPIView):
