@@ -77,6 +77,21 @@ class Order(models.Model):
                              blank=True)
     price = models.DecimalField(decimal_places=4, max_digits=15, default=0)
 
+    def calculate_prices(self):
+        order_items = OrderItem.objects.filter(order=self.id)
+        price = 0
+        for order_item in order_items:
+            order_item.discount = Product.objects.get(id=order_item.product.id).discount
+            order_item.price = Product.objects.get(id=order_item.product.id).price
+            order_item.save()
+            print("ORDER ITEM PRICE::")
+            print(order_item.price)
+            price += order_item.price * order_item.quantity * (100 - order_item.discount) / 100
+        self.price = price
+        print("ORDER PRICE::")
+        print(self.price)
+        self.save()
+
 
 class OrderItem(models.Model):
     discount = models.DecimalField(decimal_places=2,

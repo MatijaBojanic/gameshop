@@ -138,15 +138,8 @@ class OrderViewSet(mixins.CreateModelMixin,
             return Response({'checkout': 'Order is already checked out'}, status=status.HTTP_400_BAD_REQUEST)
         else:
             order.checkout_date = timezone.now().date()
-            order_items = OrderItem.objects.filter(order=order.id)
-            price = 0
-            for order_item in order_items:
-                order_item.discount = Product.objects.get(id=order_item.product.id).discount
-                order_item.price = Product.objects.get(id=order_item.product.id).price
-                order_item.save()
-                price += order_item.price * order_item.quantity * (100 - order_item.discount) / 100
-            order.price = price
             order.save()
+            order.calculate_prices()
 
         return Response(OrderSerializer(order).data)
 
@@ -191,13 +184,7 @@ class OrderItemViewSet(ModelViewSet):
         else:
             instance.delete()
             order = instance.order
-            order_items = OrderItem.objects.filter(order=order.id)
-            price = 0
-            for order_item in order_items:
-                price += order_item.price \
-                         * order_item.quantity * (100 - order_item.discount) / 100
-            order.price = price
-            order.save()
+            order.calculate_prices()
 
 
 class WishListViewSet(ModelViewSet):
