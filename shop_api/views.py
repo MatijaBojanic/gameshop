@@ -11,9 +11,9 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status, mixins
 from django.utils import timezone
-
-
+from .paginators import ProductPaginator
 # Create your views here.
+
 
 class ProductMediaViewSet(ModelViewSet):
     permission_classes = [IsAdminUser | ReadOnly]
@@ -22,7 +22,6 @@ class ProductMediaViewSet(ModelViewSet):
 
     def get_queryset(self, *args, **kwargs):
         product_id = self.kwargs.get("product_pk")
-        print(product_id)
         try:
             product = Product.objects.get(id=product_id)
         except Product.DoesNotExist:
@@ -35,7 +34,7 @@ class ProductMediaViewSet(ModelViewSet):
 
 class ProductViewSet(ModelViewSet):
     permission_classes = [IsAdminUser | ReadOnly]
-    queryset = Product.objects.all()
+    pagination_class = ProductPaginator
     serializer_classes = {
         'create': ProductCreateSerializer,
         'update': ProductCreateSerializer,
@@ -47,6 +46,46 @@ class ProductViewSet(ModelViewSet):
 
     def get_serializer_class(self):
         return self.serializer_classes.get(self.action, self.default_serializer_class)
+
+    def get_queryset(self):
+        """
+        If given param name, we filter by it.
+        If given order desc, sort by descending.
+        If given categories, we are looking for products that have one of the categories.
+        In case that a category is a parent category, we also fetch categories that are children of given
+        categories.
+
+
+        :return:
+        """
+        queryset = Product.objects.all().order_by('price')
+
+        name = self.request.query_params.get('name')
+        if name is not None:
+            queryset = queryset.filter(name__icontains=name)
+
+        order = self.request.query_params.get('order')
+        if order == 'desc':
+            queryset = queryset.order_by('-price')
+
+        categories = self.request.GET.get("categories", "")
+
+        if categories is not None:
+            categories = categories.split(",")
+            children = []
+
+            for category in categories:
+                if category.isdigit():
+                    children_categories = list(Category.objects.filter(parent=category).values_list('id', flat=True))
+                    children = children + children_categories
+                else:
+                    categories.remove(category)
+
+            categories = categories + children
+            if categories:
+                queryset = queryset.filter(categories__in=categories)
+
+        return queryset
 
 
 class CommentViewSet(ModelViewSet):
