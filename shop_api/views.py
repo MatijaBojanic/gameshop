@@ -3,7 +3,7 @@ from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from .serializers import ProductShowSerializer, ProductDetailsSerializer, ProductCreateSerializer, CommentSerializer, \
     CategoryShowSerializer, \
     CategoryCreateSerializer, OrderSerializer, OrderItemSerializer, WishListShowSerializer, WishListCreateSerializer, \
-    ProductMediaSerializer
+    ProductMediaSerializer, OrderItemShowSerializer, OrderShowSerializer
 from .models import Product, Comment, Category, Order, OrderItem, WishList, ProductMedia
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, IsAdminUser
 from auth.permissions import ReadOnly, IsCommentOwner,AdminOrNotCheckedOut, AdminOrNotCheckedOutOrder, AdminOrOwner
@@ -129,7 +129,16 @@ class OrderViewSet(mixins.CreateModelMixin,
                    mixins.DestroyModelMixin,
                    GenericViewSet):
     permission_classes = [IsAuthenticated, AdminOrNotCheckedOut]
-    serializer_class = OrderSerializer
+    serializer_classes = {
+        'create': OrderSerializer,
+        'update': OrderSerializer,
+        'partial_update': OrderSerializer,
+        'destroy': OrderSerializer,
+    }
+    default_serializer_class = OrderShowSerializer
+
+    def get_serializer_class(self):
+        return self.serializer_classes.get(self.action, self.default_serializer_class)
 
     def get_queryset(self):
         if self.request.user.is_staff:
@@ -154,8 +163,18 @@ class OrderViewSet(mixins.CreateModelMixin,
 
 class OrderItemViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated, AdminOrNotCheckedOutOrder]
-    serializer_class = OrderItemSerializer
     queryset = OrderItem.objects.all()
+
+    serializer_classes = {
+        'create': OrderItemSerializer,
+        'update': OrderItemSerializer,
+        'partial_update': OrderItemSerializer,
+        'destroy': OrderItemSerializer,
+    }
+    default_serializer_class = OrderItemShowSerializer
+
+    def get_serializer_class(self):
+        return self.serializer_classes.get(self.action, self.default_serializer_class)
 
     def get_queryset(self, *args, **kwargs):
         order_id = self.kwargs.get("order_pk")

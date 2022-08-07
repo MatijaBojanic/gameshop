@@ -94,6 +94,39 @@ class UserSerializer(serializers.ModelSerializer):
                    'last_login']
 
 
+class OrderItemShowSerializer(serializers.ModelSerializer):
+    price = serializers.SerializerMethodField('get_price')
+    discount = serializers.SerializerMethodField('get_discount')
+    product = ProductShowSerializer()
+
+    def get_price(self, obj):
+        """
+        If OI's order is not checked out, we need to fetch the current price from the product.
+        However, if the OI's order is checked out, we simply read it from the OI instance.
+        :param obj:
+        :return:
+        """
+        if obj.order.checkout_date:
+            return obj.price
+        return Product.objects.get(id=obj.product.id).price
+
+    def get_discount(self, obj):
+        """
+        If OI's order is not checked out, we need to fetch the current discount from the product.
+        However, if the OI's order is checked out, we simply read it from the OI instance.
+        :param obj:
+        :return:
+        """
+        if obj.order.checkout_date:
+            return obj.discount
+        return Product.objects.get(id=obj.product.id).discount
+
+    class Meta:
+        model = OrderItem
+        fields = '__all__'
+        read_only_fields = ['price', 'discount']
+
+
 class OrderItemSerializer(serializers.ModelSerializer):
     price = serializers.SerializerMethodField('get_price')
     discount = serializers.SerializerMethodField('get_discount')
@@ -168,6 +201,27 @@ class OrderItemSerializer(serializers.ModelSerializer):
         model = OrderItem
         fields = '__all__'
         read_only_fields = ['price', 'discount']
+
+
+class OrderShowSerializer(serializers.ModelSerializer):
+    price = serializers.SerializerMethodField('get_price')
+    order_items = OrderItemShowSerializer(many=True, read_only=True)
+
+    def get_price(self, obj):
+        if obj.checkout_date:
+            return obj.price
+        order_items = OrderItem.objects.filter(order=obj.id)
+        price = 0
+        for order_item in order_items:
+            price += Product.objects.get(id=order_item.product.id).price \
+                     * order_item.quantity * \
+                     (100 - Product.objects.get(id=order_item.product.id).discount) / 100
+        return price
+
+    class Meta:
+        model = Order
+        fields = '__all__'
+        read_only_fields = ['price']
 
 
 class OrderSerializer(serializers.ModelSerializer):
