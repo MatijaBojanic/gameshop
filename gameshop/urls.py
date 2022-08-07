@@ -59,4 +59,5 @@ urlpatterns = [
     path('', include(comments_router.urls)),
     path('', include(product_media_router.urls)),
     path('auth/', include('auth.urls')),
+    path('', include('shop_api.urls'))
 ]

@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from auth.permissions import ReadOnly, IsCommentOwner,AdminOrNotCheckedOut, AdminOrNotCheckedOutOrder, AdminOrOwner
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework import status, mixins
+from rest_framework import status, mixins, generics
 from django.utils import timezone
 from .paginators import ProductPaginator
 # Create your views here.
@@ -86,6 +86,11 @@ class ProductViewSet(ModelViewSet):
                 queryset = queryset.filter(categories__in=categories)
 
         return queryset
+
+
+class LatestProductsViewSet(generics.ListAPIView):
+    queryset = Product.objects.all().order_by('-id')[:5]
+    serializer_class = ProductShowSerializer
 
 
 class CommentViewSet(ModelViewSet):

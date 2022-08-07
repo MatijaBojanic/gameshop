@@ -100,7 +100,13 @@ Product:
 --Routes--
 
 	GET: /products/   
-		- Returns all products. Comments are not loaded.
+		- Returns all products paginated by 20. Returns the number of products found. Links to previous and next page.
+		- You can specify the search by searching products by name. Its sql like search, case insensetive.
+		- You can filter by categories, by providing categories in the url with values split by commas. This will return
+		- products that belong to a category searched or a children category of one the given categories.
+		- You can order by price, either ascending or descending by providing order with asc or desc value. Default is asc
+
+	    optional params: name (search by name), categories(multivalue split by commas), order (asc or desc)
 	GET: /products/{productId}/ 
 		- Returns product with its comments.
 	POST: /products/
@@ -316,3 +322,6 @@ User:
 		Will return error if old_password doesnt match users password, or if password and password2 dont match
 	GET: /auth/current_user/
 		-- Returns id, username, email, first_name and last_name for the user making the request.
+    PATCH: /auth/users/{userId}/staff-status/
+        --Change users staff status
+        SuperUser authentication
