@@ -98,12 +98,8 @@ class Order(models.Model):
                 order_item.discount = Product.objects.get(id=order_item.product.id).discount
                 order_item.price = Product.objects.get(id=order_item.product.id).price
                 order_item.save()
-            print("ORDER ITEM PRICE::")
-            print(order_item.price)
             price += order_item.price * order_item.quantity * (100 - order_item.discount) / 100
         self.price = price
-        print("ORDER PRICE::")
-        print(self.price)
         self.save()
 
 
