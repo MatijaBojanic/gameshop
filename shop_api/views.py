@@ -59,6 +59,9 @@ class ProductViewSet(ModelViewSet):
         :return:
         """
         queryset = Product.objects.all().order_by('price')
+        all = self.request.query_params.get('all')
+        if all:
+            self.pagination_class = None
 
         name = self.request.query_params.get('name')
         if name is not None:
