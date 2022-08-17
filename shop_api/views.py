@@ -88,7 +88,7 @@ class ProductViewSet(ModelViewSet):
             if categories:
                 queryset = queryset.filter(categories__in=categories)
 
-        return queryset
+        return queryset.distinct()
 
 
 class LatestProductsViewSet(generics.ListAPIView):
